@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>Peep example #1</title>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+		<script src="../lib/Markdown.Converter.mod.js"></script>
+		<script src="../src/peep.js"></script>
+		<script>
+		$(function(){
+			$('.peep').peep({test:'1'});
+			$('#clear').click(function(){
+				localStorage.clear();
+				 window.location = window.location; // refresh
+			});
+		});
+		</script>
+		<style>
+		[contenteditable='true'] {
+			font-family: monospace;
+		}
+		.peeptainer, .peep { font-family: monospace; width: 65em; font-size: 18px; color:#111; line-height: 1.6; overflow:hidden; }
+		.gutter, .margin, .body, .empty { display:block; float: left; margin:0; height: 1.6em; }
+		.empty  { clear: left; width:65em; }
+		.gutter { clear: left; width: 7em; text-align: right; }
+		.margin { width: 1em; }
+		.body   { width: 57em; }
+		
+		.peep-h1 { font-weight: bold; }
+		</style>
+	</head>
+	<body>
+		<section><input type="button" value="clear localstorage" id="clear"></section>
+		<p>&nbsp;</p>
+		<p>&nbsp;</p>
+		<section class="peep" contenteditable="true"># Jerks
+
+Working up a sweat, are we?
+
+> hello there
+
+Wicked sick!
+
+1. Kill everyone
+2. Win first place</section>
+
+
+<div class="peeptainer" style="display:none;">
+	<span class="gutter">###</span><span class="margin">&nbsp;</span><span class="body"><span class="peep-h1">Kozuki Kallen!</span></span><br>
+	<span class="gutter"></span><span class="margin"></span><span class="body">&gt; This is a block-line element!</span><br>
+	<!--
+	<span class="gutter">#</span><span class="margin">&nbsp;</span><span class="body">title</span>
+	-->
+	<span class="empty"></span><br>
+	
+	<span class="gutter">1.</span><span class="margin">&nbsp;</span><span class="body">Buy milk</span><br>
+	
+	<span class="gutter">2.</span><span class="margin">&nbsp;</span><span class="body">Buy Google</span><br>
+	
+	<span class="gutter">3.</span><span class="margin">&nbsp;</span><span class="body">???</span><br>
+	
+	<span class="gutter">4.</span><span class="margin">&nbsp;</span><span class="body">Profit!!!</span><br>
+	
+	<span class="gutter"></span><span class="margin">&nbsp;</span><span class="body"></span>
+	<!--
+	<span class="gutter"></span><span class="margin">&nbsp;</span><span class="body"></span>
+	-->
+</div>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+	</body>
+</html>
