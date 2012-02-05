@@ -1,6 +1,8 @@
 function SaveHash() { }
 SaveHash.prototype = {
+	saved: {},
 	set: function (key, value) {
+		this.saved["s_" + key] = value;
 		this["s_" + key] = value;
 	},
 	get: function (key) {
@@ -8,6 +10,7 @@ SaveHash.prototype = {
 	}
 };
 var g_urls = new SaveHash();
+var g_titles = new SaveHash();
 var Caret = {
 	Find: function (parentClass) {
 		var range = window.getSelection().getRangeAt(0), containerElement = range.commonAncestorContainer, parent = containerElement;
@@ -98,15 +101,20 @@ var Caret = {
 		console.log(md);
 		var html = this.Parse(md);
 		$el.html($(peepBody.clone().wrap('<div>').parent().html()).append(html));
+		var matches = md==$(this.element).text();
 		console.log(' ');
 		console.log('-- BENCHMARK');
 		console.log(' ', 'msecs', new Date()-start);
 		console.log(' ', 'count', this.changes);
-		console.log(' ', 'match', md==$(this.element).text());
+		console.log(' ', 'match', matches);
+		
+		if ( ! matches ) {
+			console.log($(this.element).text());
+		}
 		//$el.html($(html).wrap(peepBody.clone()));
 		
 		$el.keypress(function(e){
-			var c = String.fromCharCode(e.which),
+			var c = ""+String.fromCharCode(e.which),
 				interrupt = false,
 				car = Caret.Find('body'),
 				elem = car.Element,
@@ -115,21 +123,19 @@ var Caret = {
 				beforeCar = text.substring(0,car.Offset),
 				afterCar = text.substring(car.Offset);
 			
-			console.log('e.which', e.which);
-			console.log('fromChar', '"'+c+'"');
-			console.log('e.keyCode', e.keyCode);
-			console.log('offset', car.Offset);
-			
+			//-console.log('e.which', e.which);
+			//-console.log('fromChar', '"'+c+'"');
+			//-console.log(c);
+			//-console.log('keyCodeTest', !!c.match(/\w|\s|[^\u0000-\u0080]/gi));
 			
 			if ( charMap.indexOf(c) !== -1 || specialMap[e.which] !== undefined ) {
 				// look for enter, or backspace
 				// If enter, newline! And if placed in the middle or start of a line?
 				// If backspace into a block element, apply the block to the text!
 				
-				console.log(charMap.indexOf(c), specialMap[e.which]);
 				if ( e.which === 101 )
 				{
-					console.log(car);
+					//-console.log(car);
 					//console.log($line);
 					//console.log(line);
 					//console.log(car.Offset);
@@ -147,14 +153,12 @@ var Caret = {
 			}
 			else
 			{
-				console.log('redoing line');
 				var nLine = base.ParseLine(text).find('.peepline');
-				console.log(nLine);
 				$line.replaceWith(nLine);
 			}
 			
 			if ( interrupt ) {
-				console.log('interrupting stuff');
+				//-console.log('interrupting stuff');
 				return false;
 			}
 		});
@@ -164,40 +168,64 @@ var Caret = {
 		
 		var pLine = peepLine.clone(),
 			block = false,
-			blockClass = '',
+			blockAttr = {},
 			gutter = ( gutter = text.indexOf(' ') ) !== -1 && gutter <= 6 ? text.substring(0,gutter) : false;
-		
 		
 		// Lists
 		text = text.replace(/^(\d+[.]).+?(.*)/gm,
 			function (wholeMatch, m1, m2 ) {
 				block = m1;
-				blockClass = 'ol';
+				blockAttr.class = 'peep-ol';
 				base.changes++;
-				return m2;
+				return base.ParseInline(m2);
+			}
+		).replace(/^(\*|\-).+?(.*)/gm,
+			function (wholeMatch, m1, m2 ) {
+				block = m1;
+				blockClass = 'peep-ul';
+				base.changes++;
+				return base.ParseInline(m2);
 			}
 		);
-		
+
+		// footnotes
+		text = text.replace(/^(\[\^([a-z0-9+])\]\:)\s(.*)/gm,
+			function(wholeMatch, m1, m2, m3) {
+				block = '<a href="#rr' + m2 + '" rev="footnote">[^' + m2 + ']</a>:';
+				blockAttr.class = 'peep-footnote';
+				blockAttr.id = 'r' + m2;
+				blockAttr.name = 'r' + m2;
+				base.changes++;
+				return '<ref>' + base.ParseInline(m3) + '</ref>';
+			}
+		);
+
+		// ref-style links [something]: http://cool/
+		text = text.replace(/^(\[[a-z0-9+]\]\:)\s(.*)/gm,
+			function(wholeMatch, m1, m2) {
+				block = m1;
+				blockAttr.class = 'peep-ref';
+				base.changes++;
+				return base.ParseInline(m2);
+			}
+		);
+
 		// Code blocks
 		
 		text += "~0";
 
-		text = text.replace(/(?:\n\n|^)((?:(?:[ ]{4}|\t).*\n+)+)(\n*[ ]{0,3}[^ \t\n]|(?=~0))/g,
+		text = text.replace(/^(\t|\s{4})(.*)/gm,
 			function (wholeMatch, m1, m2) {
-				var codeblock = m1;
-				var nextChar = m2;
-
-				codeblock = _EncodeCode(_Outdent(codeblock));
-				codeblock = _Detab(codeblock);
+				var codeblock = m2;
+				codeblock = base._EncodeCode(base._Outdent(codeblock));
+				codeblock = base._Detab(codeblock);
 				codeblock = codeblock.replace(/^\n+/g, ""); // trim leading newlines
 				codeblock = codeblock.replace(/\n+$/g, ""); // trim trailing whitespace
-
-				codeblock = "<pre><code>" + codeblock + "\n</code></pre>";
-
-				return "\n\n" + codeblock + "\n\n" + nextChar;
+				codeblock = "<pre class=\"peep-code\"><code>" + m1 +  codeblock + "</code></pre>";
+				return codeblock;
 			}
 		);
-
+		
 		// attacklab: strip sentinel
 		text = text.replace(/~0/, "");
 		
@@ -205,7 +233,7 @@ var Caret = {
 		text = text.replace(/^(\#{1,6})[ \t]*(.+?)[ \t]*\#*\n*$/gm,
 			function (wholeMatch, m1, m2) {
 				base.changes++;
-				blockClass = 'h' + m1.length;
+				blockAttr.class = 'peep-header peep-h' + m1.length;
 				block = m1;
 				return base.ParseInline(m2);
 			}
@@ -213,10 +241,16 @@ var Caret = {
 		
 		if ( block )
 		{
-			pLine.attr('class','peepline peep-' + blockClass)
-				.find('.gutter').html(gutter)
+			var pLineLine = pLine.find('.peepline');
+			for ( var i in blockAttr ) {
+				pLineLine.attr(i, blockAttr[i]);
+			}
+			console.log(gutter);
+			pLine
+				.find('.gutter').html(block)
 			.end()
-				.find('.body').html(this.ParseInline(text));
+				//.find('.body').html(this.ParseInline(text));
+				.find('.body').html(text);
 		}
 		else if ( text.length > 0 )
 		{
@@ -259,6 +293,15 @@ var Caret = {
 				return wholeMatch;
 			}
 		);
+
+		// footnotes
+		//text = text.replace(/(^.?$)(\[\^([(0-9)+])\])/m,
+		text = text.replace(/(\[\^([0-9+])\])/g,
+			function(wholeMatch, m1, m2){
+				base.changes++;
+				return '<sup>[<a href="#r' + m2 + '" id="rr' + m2 + '" rel="footnote" name="rr' + m2 +'">^' + m2 + '</a>]</sup>';
+			}
+		);
 		
 		// Code ticks `code`
 		text = text.replace(/([\W_]|^)(\`{1,2})(?=\S)([^\r]*?\S[\`]*)\2([\W_]|$)/g,
@@ -269,41 +312,28 @@ var Caret = {
 		);
 		
 		// Links
-		text = text.replace(/[^\!](\[((?:\[[^\]]*\]|[^\[\]])*)\][ ]?(?:\n[ ]*)?\[(.*?)\])()()()()/g,
-			function(wholeMatch, m1, m2, m3, m4, m5, m6, m7){
-				base.changes++;
-				return base.writeAnchorTag(wholeMatch, m1, m2, m3, m4, m5, m6, m7);
-			}
-		).replace(/[^\!](\[((?:\[[^\]]*\]|[^\[\]])*)\]\([ \t]*()<?((?:\([^)]*\)|[^()])*?)>?[ \t]*((['"])(.*?)\6[ \t]*)?\))/g,
-			function(wholeMatch, m1, m2, m3, m4, m5, m6, m7){
-				base.changes++;
-				console.log(wholeMatch);
-				return base.writeAnchorTag(wholeMatch, m1, m2, m3, m4, m5, m6, m7);
-			}
-		).replace(/[^\!](\[([^\[\]]+)\])()()()()()/g,
-			function(wholeMatch, m1, m2, m3, m4, m5, m6, m7){
-				base.changes++;
-				return base.writeAnchorTag(wholeMatch, m1, m2, m3, m4, m5, m6, m7);
-			}
-		).replace(/(^|\s)(https?|ftp)(:\/\/[\-A-Z0-9+&@#\/%?=~_|\[\]\(\)!:,\.;]*[\-A-Z0-9+&@#\/%=~_|\[\]])($|\W)/gi, // Auto links
-			function(wholeMatch, m1, m2, m3, m4){
-				base.changes++;
-				return m1 + "<" + m2 + m3 + ">" + m4;
-			}
-		).replace(/<((https?|ftp):[^'">\s]+)>/gi, //  autolink anything like <http://example.com>
-			function (wholematch, m1) {
+		text = text
+			.replace(/^(\[((?:\[[^\]]*\]|[^\^\[\]])*)\][ ]?(?:\n[ ]*)?\[(.*?)\])()()()()/g, base.writeAnchorTag)
+			.replace(/(\[((?:\[[^\]]*\]|[^\^\[\]])*)\]\([ \t]*()<?((?:\([^)]*\)|[^()])*?)>?[ \t]*((['"])(.*?)\6[ \t]*)?\))/g, base.writeAnchorTag)
+			.replace(/(\[([^\^\[\]]+)\])()()()()()/g, base.writeAnchorTag)
+			.replace(/(^|\s)(https?|ftp)(:\/\/[\-A-Z0-9+&@#\/%?=~_|\[\]\(\)!:,\.;]*[\-A-Z0-9+&@#\/%=~_|\[\]])($|\W)/gi, // Auto links
+				function(wholeMatch, m1, m2, m3, m4){
+					base.changes++;
+					return m1 + "<" + m2 + m3 + ">" + m4;
+				}
+			).replace(/<((https?|ftp):[^'">\s]+)>/gi, //  autolink anything like <http://example.com>
+			function (wholematch, m1, o, d, str) { console.dir(arguments);
 				return "<a href=\"" + m1 + "\">" + m1 + "</a>";
-			}
-		);
+			});
+		
 		return text;
 	};
 	
 	Plugin.prototype.Parse = function ( text ) {
-		
 		/* clean up */
-		text = text.replace(/\r\n/g, "\n"); // DOS to Unix
-		text = text.replace(/\r/g, "\n"); // Mac to Unix
+		text = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n"); // DOS to Unix, Mac to Unix
 		text.replace(/>/g, "&gt;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); // htmlspecialchars
+		text = this._StripLinkDefinitions(text);
 		
 		var lines = text.split("\n"), linelength = lines.length, i;
 		for (i=0; i<linelength; i++) {
@@ -330,7 +360,7 @@ var Caret = {
 				link_id = alt_text.toLowerCase().replace(/ ?\n/g, " ");
 			}
 			url = "#" + link_id;
-
+			
 			if (g_urls.get(link_id) !== undefined) {
 				url = g_urls.get(link_id);
 				if (g_titles.get(link_id) !== undefined) {
@@ -345,14 +375,29 @@ var Caret = {
 		alt_text = base.escapeCharacters(base.attributeEncode(alt_text), "*_[]()");
 		url = base.escapeCharacters(url, "*_");
 		var result = "<img src=\"" + url + "\"";
-		result += " style=\"width: auto; height:1em;\"";
+		result += " style=\"width: auto; height:1em; margin-left:0.25em; vertical-align:middle;\"";
 		result += " />";
 		
-		
-		return wholeMatch.replace(m4, m4+result);// + result;
+		return '<span class=\"peep-img\">' + wholeMatch.replace(m4, m4+result) + '</span>';
 	};
 	
-	Plugin.prototype.writeAnchorTag = function(wholeMatch, m1, m2, m3, m4, m5, m6, m7) {
+	Plugin.prototype.writeAnchorTag = function(wholeMatch, m1, m2, m3, m4, m5, m6, m7, offset, string) {
+		console.log(string);
+		console.dir(arguments);
+		// images are caught by the regex, ignore if the link is prefixed with a !
+		if ( string[0] == '!' || (typeof string[offset-1] !== 'undefined' && string[offset-1] === '!') )
+		{
+			return wholeMatch;
+		}
+
+		base.changes++;
+
+		var result = '';
+		if ( wholeMatch[0] !== '[' ) {
+			wholeMatch = wholeMatch.substring(1);
+			result += ' ';
+		}
+		
 		if (m7 === undefined) {
 			m7 = "";
 		}
@@ -368,7 +413,6 @@ var Caret = {
 				link_id = link_text.toLowerCase().replace(/ ?\n/g, " ");
 			}
 			url = "#" + link_id;
-			
 			if (g_urls.get(link_id) !== undefined) {
 				url = g_urls.get(link_id);
 				if (g_titles.get(link_id) !== undefined) {
@@ -387,8 +431,8 @@ var Caret = {
 		
 		url = base.encodeProblemUrlChars(url);
 		url = base.escapeCharacters(url, "*_");
-		var result = "<a href=\"" + url + "\"";
-		console.log(title);
+		result += "<a href=\"" + url + "\"";
+		
 		if (title !== "") {
 			title = base.attributeEncode(title);
 			title = base.escapeCharacters(title, "*_");
@@ -398,12 +442,55 @@ var Caret = {
 		result += ">" + wholeMatch + "</a>";
 		
 		return result;
-    };
+	};
+	
+	Plugin.prototype._EncodeCode = function(text) {
+		//
+		// Encode/escape certain characters inside Markdown code runs.
+		// The point is that in code, these characters are literals,
+		// and lose their special Markdown meanings.
+		//
+		// Encode all ampersands; HTML entities are not
+		// entities within a Markdown code span.
+		text = text.replace(/&/g, "&amp;");
+
+		// Do the angle bracket song and dance:
+		text = text.replace(/</g, "&lt;");
+		text = text.replace(/>/g, "&gt;");
+
+		// Now, escape characters that are magic in Markdown:
+		text = base.escapeCharacters(text, "\*_{}[]\\", false);
+		return text;
+	};
+	
+	Plugin.prototype._Outdent = function(text) {
+		return text.replace(/^(\t|[ ]{1,4})/gm, "~0").replace(/~0/g, ""); // attacklab: g_tab_width
+	};
+
+	Plugin.prototype._Detab = function(text) {
+		if (!/\t/.test(text)) {
+			return text;
+		}
+		
+		var	spaces = ["    ", "   ", "  ", " "],
+			skew = 0,
+			v;
+		
+		return text.replace(/[\n\t]/g, function (match, offset) {
+			if (match === "\n") {
+				skew = offset + 1;
+				return match;
+			}
+			v = (offset - skew) % 4;
+			skew = offset + 1;
+			return spaces[v];
+		});
+	};
 	
 	Plugin.prototype.attributeEncode = function (text) {
 		// unconditionally replace angle brackets here -- what ends up in an attribute (e.g. alt or title)
 		// never makes sense to have verbatim HTML in it (and the sanitizer would totally break it)
-		return text.replace(/>/g, "&gt;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+		return String(text).replace(/>/g, "&gt;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
 	};
 	
 	Plugin.prototype.escapeCharacters = function (text, charsToEscape, afterBackslash) {
@@ -443,6 +530,38 @@ var Caret = {
 			}
 			return "%" + match.charCodeAt(0).toString(16);
 		});
+	};
+	
+	Plugin.prototype._StripLinkDefinitions = function(text) {
+		text = text.replace(/^[ ]{0,3}\[(.+)\]:[ \t]*\n?[ \t]*<?(\S+?)>?(?=\s|$)[ \t]*\n?[ \t]*((\n*)["(](.+?)[")][ \t]*)?(?:\n*)/gm,
+			function (wholeMatch, m1, m2, m3, m4, m5) {
+				m1 = m1.toLowerCase();
+				g_urls.set(m1, base._EncodeAmpsAndAngles(m2));  // Link IDs are case-insensitive
+				if (m4) {
+					// Oops, found blank lines, so it's not a title.
+					// Put back the parenthetical statement we stole.
+					return m3;
+				} else if (m5) {
+					g_titles.set(m1, m5.replace(/"/g, "&quot;"));
+				}
+				// we're keeping it native, so we return the line, as-is.
+				return wholeMatch;
+			}
+		);
+		return text;
+	};
+	
+	Plugin.prototype._EncodeAmpsAndAngles = function(text) {
+		// Smart processing for ampersands and angle brackets that need to be encoded.
+
+		// Ampersand-encoding based entirely on Nat Irons's Amputator MT plugin:
+		//   http://bumppo.net/projects/amputator/
+		text = text.replace(/&(?!#?[xX]?(?:[0-9a-fA-F]+|\w+);)/g, "&amp;");
+
+		// Encode naked <'s
+		text = text.replace(/<(?![a-z\/?\$!])/gi, "&lt;");
+
+		return text;
 	};
 	
 	// A really lightweight plugin wrapper around the constructor,
