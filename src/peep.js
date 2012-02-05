@@ -1,3 +1,6 @@
+/**
+ * Peep v 0.2 | See bundled LICENSE file for license
+ */
 function SaveHash() { }
 SaveHash.prototype = {
 	saved: {},
