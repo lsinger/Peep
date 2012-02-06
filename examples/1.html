@@ -32,6 +32,13 @@
 			white-space: -o-pre-wrap; /* Opera 7 */
 			word-wrap: break-word; /* Internet Explorer 5.5+ */
 		}
+
+		.peep-indent { float: left; width: 1em; }
+		.peep-indent-block { float: left; }
+		.peep-indent-level-1 { width: 37.5em; }
+		.peep-indent-level-2 { width: 36.5em; }
+		.peep-indent-level-3 { width: 35.5em; }
+
 		.peep code { color:darkblue; }
 		.peep pre code { color:lightblue; }
 		.peep-footnote ref { color: #aaa; }
@@ -58,11 +65,15 @@ Peep, like iA Writer, also features *sweet* block out-/indentation for a little 
 
 ## Some examples
 
-wadda ![image](1.png)
+wadda ![image](1.png "image title")
 
     This should be a code block
 
 > This is a normal [block][2]. This is a normal `block`. This is a normal block[^2]. This is a [normal][google] block. This is a normal block. http://auto-link.com
+
+> > This is a double indented block. I like this block, because it is just a tiny bit further away from the margin than the block with only one > .
+
+> > > TRIPLE INDENTED!!!! Now we're talking business. This is some serious stuff. Just *look* at the wonderful wrapping!!!
 
 1. This is a list
 2. This is a second point in the list

@@ -213,6 +213,18 @@ var Caret = {
 			}
 		);
 
+		// Indent blocks - the regex for this could probably be cleaner...
+		text = text.replace(/^(\>\s)(\1)*(.*)/,
+			function(wholeMatch, m1, m2, m3){
+				base.changes++;
+				var indentLevel = wholeMatch.match(/^(\>\ )+/g)[0].length/2, result = '';
+				for ( var i=0; i<indentLevel; i++ ) {
+					result += '<div class="peep-indent">&gt; </div>';
+				}
+				return result + '<div class="peep-indent-block peep-indent-level-' + indentLevel + '">' + base.ParseInline(m3) + '</div>';
+			}
+		);
+
 		// Code blocks
 		
 		text += "~0";
@@ -248,7 +260,7 @@ var Caret = {
 			for ( var i in blockAttr ) {
 				pLineLine.attr(i, blockAttr[i]);
 			}
-			console.log(gutter);
+			
 			pLine
 				.find('.gutter').html(block)
 			.end()
