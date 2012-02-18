@@ -136,7 +136,6 @@ var Caret = {
 		if ( ! matches ) {
 			console.log($(this.element).text());
 		}
-		//$el.html($(html).wrap(peepBody.clone()));
 		
 		$el.keypress(function(e){
 			var c = ""+String.fromCharCode(e.which),
@@ -228,7 +227,6 @@ var Caret = {
 		// ref-style links [something]: http://cool/
 		text = text.replace(/^(\[[\w]+\]\:)\s(.*)/,
 			function(wholeMatch, m1, m2) {
-				console.dir(arguments);
 				block = m1;
 				blockAttr.class = 'peep-ref';
 				base.changes++;
@@ -351,24 +349,9 @@ var Caret = {
 		
 		// Links
 		text = text
-			.replace(/(\[((?:\[[^\]]*\]|[^\^\[\]])*)\][ ]?(?:\n[ ]*)?\[(.*?)\])()()()()/g,
-				function(wholeMatch, m1, m2, m3, m4, m5, m6, m7, offset, string){
-					console.log('1');
-					return base.writeAnchorTag(wholeMatch, m1, m2, m3, m4, m5, m6, m7, offset, string);
-				}
-			)
-			.replace(/(\[((?:\[[^\]]*\]|[^\^\[\]])*)\]\([ \t]*()<?((?:\([^)]*\)|[^()])*?)>?[ \t]*((['"])(.*?)\6[ \t]*)?\))/g,
-				function(wholeMatch, m1, m2, m3, m4, m5, m6, m7, offset, string){
-					console.log('2');
-					return base.writeAnchorTag(wholeMatch, m1, m2, m3, m4, m5, m6, m7, offset, string);
-				}
-			)
-			.replace(/(\[([^\^\[\]]+)\])()()()()()/g,
-				function(wholeMatch, m1, m2, m3, m4, m5, m6, m7, offset, string){
-					console.log('3');
-					return base.writeAnchorTag(wholeMatch, m1, m2, m3, m4, m5, m6, m7, offset, string);
-				}
-			)
+			.replace(/(\[((?:\[[^\]]*\]|[^\^\[\]])*)\][ ]?(?:\n[ ]*)?\[(.*?)\])()()()()/g, base.writeAnchorTag)
+			.replace(/(\[((?:\[[^\]]*\]|[^\^\[\]])*)\]\([ \t]*()<?((?:\([^)]*\)|[^()])*?)>?[ \t]*((['"])(.*?)\6[ \t]*)?\))/g, base.writeAnchorTag)
+			/*.replace(/(\[([^\^\[\]]+)\])()()()()()/g, base.writeAnchorTag)*/
 			.replace(/(^|\s)(https?|ftp)(:\/\/[\-A-Z0-9+&@#\/%?=~_|\[\]\(\)!:,\.;]*[\-A-Z0-9+&@#\/%=~_|\[\]])($|\W)/gi, // Auto links
 				function(wholeMatch, m1, m2, m3, m4){
 					base.changes++;
@@ -397,8 +380,6 @@ var Caret = {
 	};
 	
 	Plugin.prototype.writeAnchorTag = function(wholeMatch, m1, m2, m3, m4, m5, m6, m7, offset, string) {
-		//console.log(string);
-		//console.dir(arguments);
 		// images are caught by the regex, ignore if the link is prefixed with a !
 		if ( string[0] == '!' || (typeof string[offset-1] !== 'undefined' && string[offset-1] === '!') )
 		{
@@ -491,6 +472,7 @@ var Caret = {
 		alt_text = base.escapeCharacters(base.attributeEncode(alt_text), "*_[]()");
 		url = base.escapeCharacters(url, "*_");
 		var result = "<img src=\"" + url + "\"";
+		result += " title=\"" + alt_text + "\""
 		result += " style=\"width: auto; height:1em; margin-left:0.25em; vertical-align:middle;\"";
 		result += " />";
 		
