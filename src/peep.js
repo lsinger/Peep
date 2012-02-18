@@ -1,6 +1,25 @@
 /**
- * Peep v 0.2 | See bundled LICENSE file for license
+ * Peep v 0.2 | Copyright (C) 2011 Jonas Skovmand, http://sätf.se
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is furnished to do
+ * so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
+
 function SaveHash() { }
 SaveHash.prototype = {
 	saved: {},
@@ -102,9 +121,12 @@ var Caret = {
 		
 		var md = $el.text();
 		console.log(md);
+		
 		var html = this.Parse(md);
 		$el.html($(peepBody.clone().wrap('<div>').parent().html()).append(html));
 		var matches = md==$(this.element).text();
+		
+		
 		console.log(' ');
 		console.log('-- BENCHMARK');
 		console.log(' ', 'msecs', new Date()-start);
@@ -192,7 +214,7 @@ var Caret = {
 		);
 
 		// footnotes
-		text = text.replace(/^(\[\^([a-z0-9+])\]\:)\s(.*)/gm,
+		text = text.replace(/^(\[\^([\w+])\]\:)\s(.*)/gm,
 			function(wholeMatch, m1, m2, m3) {
 				block = '<a href="#rr' + m2 + '" rev="footnote">[^' + m2 + ']</a>:';
 				blockAttr.class = 'peep-footnote';
@@ -204,8 +226,9 @@ var Caret = {
 		);
 
 		// ref-style links [something]: http://cool/
-		text = text.replace(/^(\[[a-z0-9+]\]\:)\s(.*)/gm,
+		text = text.replace(/^(\[[\w]+\]\:)\s(.*)/,
 			function(wholeMatch, m1, m2) {
+				console.dir(arguments);
 				block = m1;
 				blockAttr.class = 'peep-ref';
 				base.changes++;
@@ -260,7 +283,7 @@ var Caret = {
 			for ( var i in blockAttr ) {
 				pLineLine.attr(i, blockAttr[i]);
 			}
-			
+
 			pLine
 				.find('.gutter').html(block)
 			.end()
@@ -328,16 +351,31 @@ var Caret = {
 		
 		// Links
 		text = text
-			.replace(/^(\[((?:\[[^\]]*\]|[^\^\[\]])*)\][ ]?(?:\n[ ]*)?\[(.*?)\])()()()()/g, base.writeAnchorTag)
-			.replace(/(\[((?:\[[^\]]*\]|[^\^\[\]])*)\]\([ \t]*()<?((?:\([^)]*\)|[^()])*?)>?[ \t]*((['"])(.*?)\6[ \t]*)?\))/g, base.writeAnchorTag)
-			.replace(/(\[([^\^\[\]]+)\])()()()()()/g, base.writeAnchorTag)
+			.replace(/(\[((?:\[[^\]]*\]|[^\^\[\]])*)\][ ]?(?:\n[ ]*)?\[(.*?)\])()()()()/g,
+				function(wholeMatch, m1, m2, m3, m4, m5, m6, m7, offset, string){
+					console.log('1');
+					return base.writeAnchorTag(wholeMatch, m1, m2, m3, m4, m5, m6, m7, offset, string);
+				}
+			)
+			.replace(/(\[((?:\[[^\]]*\]|[^\^\[\]])*)\]\([ \t]*()<?((?:\([^)]*\)|[^()])*?)>?[ \t]*((['"])(.*?)\6[ \t]*)?\))/g,
+				function(wholeMatch, m1, m2, m3, m4, m5, m6, m7, offset, string){
+					console.log('2');
+					return base.writeAnchorTag(wholeMatch, m1, m2, m3, m4, m5, m6, m7, offset, string);
+				}
+			)
+			.replace(/(\[([^\^\[\]]+)\])()()()()()/g,
+				function(wholeMatch, m1, m2, m3, m4, m5, m6, m7, offset, string){
+					console.log('3');
+					return base.writeAnchorTag(wholeMatch, m1, m2, m3, m4, m5, m6, m7, offset, string);
+				}
+			)
 			.replace(/(^|\s)(https?|ftp)(:\/\/[\-A-Z0-9+&@#\/%?=~_|\[\]\(\)!:,\.;]*[\-A-Z0-9+&@#\/%=~_|\[\]])($|\W)/gi, // Auto links
 				function(wholeMatch, m1, m2, m3, m4){
 					base.changes++;
 					return m1 + "<" + m2 + m3 + ">" + m4;
 				}
 			).replace(/<((https?|ftp):[^'">\s]+)>/gi, //  autolink anything like <http://example.com>
-			function (wholematch, m1, o, d, str) { console.dir(arguments);
+			function (wholematch, m1, o, d, str) {
 				return "<a href=\"" + m1 + "\">" + m1 + "</a>";
 			});
 		
@@ -358,47 +396,9 @@ var Caret = {
 		return lines.join("\n");
 	};
 	
-	Plugin.prototype.writeImageTag = function(wholeMatch, m1, m2, m3, m4, m5, m6, m7) {
-		var whole_match = m1;
-		var alt_text = m2;
-		var link_id = m3.toLowerCase();
-		var url = m4;
-		var title = m7;
-		
-		if (!title){
-			title = "";
-		}
-		
-		if (url === "") {
-			if (link_id === "") {
-				// lower-case and turn embedded newlines into spaces
-				link_id = alt_text.toLowerCase().replace(/ ?\n/g, " ");
-			}
-			url = "#" + link_id;
-			
-			if (g_urls.get(link_id) !== undefined) {
-				url = g_urls.get(link_id);
-				if (g_titles.get(link_id) !== undefined) {
-					title = g_titles.get(link_id);
-				}
-			}
-			else {
-				return whole_match;
-			}
-		}
-		
-		alt_text = base.escapeCharacters(base.attributeEncode(alt_text), "*_[]()");
-		url = base.escapeCharacters(url, "*_");
-		var result = "<img src=\"" + url + "\"";
-		result += " style=\"width: auto; height:1em; margin-left:0.25em; vertical-align:middle;\"";
-		result += " />";
-		
-		return '<span class=\"peep-img\">' + wholeMatch.replace(m4, m4+result) + '</span>';
-	};
-	
 	Plugin.prototype.writeAnchorTag = function(wholeMatch, m1, m2, m3, m4, m5, m6, m7, offset, string) {
-		console.log(string);
-		console.dir(arguments);
+		//console.log(string);
+		//console.dir(arguments);
 		// images are caught by the regex, ignore if the link is prefixed with a !
 		if ( string[0] == '!' || (typeof string[offset-1] !== 'undefined' && string[offset-1] === '!') )
 		{
@@ -457,6 +457,44 @@ var Caret = {
 		result += ">" + wholeMatch + "</a>";
 		
 		return result;
+	};
+	
+	Plugin.prototype.writeImageTag = function(wholeMatch, m1, m2, m3, m4, m5, m6, m7) {
+		var whole_match = m1;
+		var alt_text = m2;
+		var link_id = m3.toLowerCase();
+		var url = m4;
+		var title = m7;
+		
+		if (!title){
+			title = "";
+		}
+		
+		if (url === "") {
+			if (link_id === "") {
+				// lower-case and turn embedded newlines into spaces
+				link_id = alt_text.toLowerCase().replace(/ ?\n/g, " ");
+			}
+			url = "#" + link_id;
+			
+			if (g_urls.get(link_id) !== undefined) {
+				url = g_urls.get(link_id);
+				if (g_titles.get(link_id) !== undefined) {
+					title = g_titles.get(link_id);
+				}
+			}
+			else {
+				return whole_match;
+			}
+		}
+		
+		alt_text = base.escapeCharacters(base.attributeEncode(alt_text), "*_[]()");
+		url = base.escapeCharacters(url, "*_");
+		var result = "<img src=\"" + url + "\"";
+		result += " style=\"width: auto; height:1em; margin-left:0.25em; vertical-align:middle;\"";
+		result += " />";
+		
+		return '<span class=\"peep-img\">' + wholeMatch.replace(m4, m4+result) + '</span>';
 	};
 	
 	Plugin.prototype._EncodeCode = function(text) {

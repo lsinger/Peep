@@ -3,6 +3,7 @@
 	<head>
 		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
 		<title>Peep example #1</title>
+		<link rel="stylesheet" href="peep.css" media="screen">
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
 		<script>window.jQuery || document.write('<script src="../lib/jquery.min.js"><\/script>')</script>
 		<script src="../src/peep.js"></script>
@@ -11,41 +12,6 @@
 			$('.peep').peep();
 		});
 		</script>
-		<style>
-		[contenteditable='true'] {
-			font-family: monospace;
-		}
-		.peep { margin:0 auto; outline: none; font-family: monospace; width: 43em; font-size: 18px; color:#111; line-height: 1.6; overflow:hidden; }
-		.gutter, .margin, .body, .empty { display:block; float: left; margin:0; min-height: 1.6em; }
-		.empty  { clear: left; width:32em; padding-left:3em; }
-		.gutter { clear: left; width: 4em; text-align: right; }
-		.margin { width: 0.5em; }
-		.body   { width: 38.5em; }
-		pre { margin:0; }
-		.peep a { white-space: nowrap; }
-		.peep-header .body { font-weight: bold; }
-		.peep-img { border-bottom: 1px dotted lightblue; }
-		.peep {
-			white-space: pre-wrap; /* css-3 */
-			white-space: -moz-pre-wrap !important; /* Mozilla, since 1999 */
-			white-space: -pre-wrap; /* Opera 4-6 */
-			white-space: -o-pre-wrap; /* Opera 7 */
-			word-wrap: break-word; /* Internet Explorer 5.5+ */
-		}
-
-		.peep-indent { float: left; width: 1em; }
-		.peep-indent-block { float: left; }
-		.peep-indent-level-1 { width: 37.5em; }
-		.peep-indent-level-2 { width: 36.5em; }
-		.peep-indent-level-3 { width: 35.5em; }
-
-		.peep code { color:darkblue; }
-		.peep pre code { color:lightblue; }
-		.peep-footnote ref { color: #aaa; }
-		.peep-footnote:target td { background-color:#FFF1C7; }
-		.peep-footnote:target td:first-child { border-radius: 0.5em 0 0 0.5em; }
-		.peep-footnote:target td:last-child { border-radius: 0 0.5em 0.5em 0; }
-		</style>
 	</head>
 	<body>
 		<p>&nbsp;</p>
@@ -90,5 +56,7 @@ wadda ![image](1.png "image title")
 [^2]: This is a **footnote**: http://google.com/</section>
 		<p>&nbsp;</p>
 		<p>&nbsp;</p>
+		<script type="text/javascript" src="http://use.typekit.com/cdw6hvm.js"></script>
+		<script type="text/javascript">try{Typekit.load();}catch(e){}</script>
 	</body>
 </html>

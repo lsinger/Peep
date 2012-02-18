@@ -1,4 +1,21 @@
-# Peep, a javascript iA Writer-style Markdown WYSIWYG
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>Peep, a javascript iA Writer-style Markdown WYSIWYG</title>
+		<link rel="stylesheet" href="peep.css" media="screen">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+		<script>window.jQuery || document.write('<script src="../lib/jquery.min.js"><\/script>')</script>
+		<script src="../src/peep.js"></script>
+		<script>
+		$(function(){
+			$('.peep').peep();
+		});
+		</script>
+	</head>
+	<body>
+		<p>&nbsp;</p>
+		<section class="peep"># Peep, a javascript iA Writer-style Markdown WYSIWYG
 Meet *peep*, your new friend. [Peep][peep] is attached to a `contenteditable`, and then allows you to input live and lovely Markdown, which is automatically formatted, but still preserves your initial markdown syntax. It tries to replicate [iA Writer's](http://www.iawriter.com/) [Markdown](http://daringfireball.net/projects/markdown/) behavior to the extent *possible* in javascript.
 
 [peep]: http://xn--stf-qla.se/peep/
@@ -22,8 +39,14 @@ v0.1
 * **Parses** Italic, bold, lists, images, links, blocks, headers
 * **Functionality**: The parser *works*, but interaction and contenteditable part remains to be perfected.
 
-## License & copyright
+## License &amp; copyright
 Peep is copyright Jonas Skovmand 2011 and licensed under the MIT license. You can find the full license in the `LICENSE` file.
 
 ## Thanks
-A big thanks to Stack Overflow's excellent [PageDown](http://code.google.com/p/pagedown/) javascript markdown parser, from which I have borrowed heavily from in creating Peep.
+A big thanks to Stack Overflow's excellent [PageDown](http://code.google.com/p/pagedown/) javascript markdown parser, from which I have borrowed heavily from in creating Peep.</section>
+		<p>&nbsp;</p>
+		<p>&nbsp;</p>
+		<script type="text/javascript" src="http://use.typekit.com/cdw6hvm.js"></script>
+		<script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+	</body>
+</html>
